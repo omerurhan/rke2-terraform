@@ -5,10 +5,10 @@ module "cp_sg" {
   description = "K8S API Server Access"
   vpc_id      = module.vpc_upstream.vpc_id
 
-  ingress_cidr_blocks  = [local.vpc_cidr, local.client_cidr]
+  ingress_cidr_blocks  = [var.vpc_cidr, var.client_cidr]
   ingress_rules        = ["kubernetes-api-tcp"]
 
-   tags = local.tags
+   tags = var.tags
 }
 
 module "node_sg" {
@@ -18,13 +18,13 @@ module "node_sg" {
   description = "K8S Node to Node Acccess"
   vpc_id      = module.vpc_upstream.vpc_id
 
-  ingress_cidr_blocks  = [local.vpc_cidr]
+  ingress_cidr_blocks  = [var.vpc_cidr]
   ingress_rules        = ["all-all"]
 
   egress_cidr_blocks  = ["0.0.0.0/0"]
   egress_rules        = ["all-all"]
 
-  tags = local.tags
+  tags = var.tags
 }
 
 module ssh_sg {
@@ -37,6 +37,6 @@ module ssh_sg {
   ingress_cidr_blocks  = ["0.0.0.0/0"]
   ingress_rules        = ["ssh-tcp"]
 
-  tags = local.tags
+  tags = var.tags
 
 }

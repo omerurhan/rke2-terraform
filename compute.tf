@@ -3,35 +3,48 @@ data "aws_availability_zones" "available" {}
 module "ec2_instance_cp" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-ec2-instance.git?ref=v4.3.0"
 
-  for_each = toset(["0", "1", "2"])
-
-  name = "cp-${each.key}"
+  count = var.cp_count
+  name = "cp-${count.index}"
   #create_spot_instance = true
   associate_public_ip_address = true
 
-  ami                    = local.ami
-  instance_type          = local.instance_type
-  key_name               = local.key_name
+  ami                    = var.ami
+  instance_type          = var.instance_type
+  key_name               = var.key_name
   monitoring             = true
   vpc_security_group_ids = [module.cp_sg.security_group_id, module.node_sg.security_group_id, module.ssh_sg.security_group_id]
-  subnet_id              = element(module.vpc_upstream.public_subnets, each.key)
+  subnet_id              = element(module.vpc_upstream.public_subnets, count.index)
+
+  root_block_device = [
+    {
+      volume_type = "gp3"
+      volume_size = 40
+    },
+  ]
 }
 
 module "ec2_instance_worker" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-ec2-instance.git?ref=v4.3.0"
 
-  for_each = toset(["0", "1", "2"])
+  count = var.worker_count
 
-  name = "worker-${each.key}"
+  name = "worker-${count.index}"
   #create_spot_instance = true
   associate_public_ip_address = true
 
-  ami                    = local.ami
-  instance_type          = local.instance_type
-  key_name               = local.key_name
+  ami                    = var.ami
+  instance_type          = var.instance_type
+  key_name               = var.key_name
   monitoring             = true
   vpc_security_group_ids = [module.node_sg.security_group_id, module.ssh_sg.security_group_id]
-  subnet_id              = element(module.vpc_upstream.public_subnets, each.key)
+  subnet_id              = element(module.vpc_upstream.public_subnets, count.index)
+
+  root_block_device = [
+    {
+      volume_type = "gp3"
+      volume_size = 40
+    },
+  ]
 
   ebs_block_device = [
    {
@@ -41,7 +54,7 @@ module "ec2_instance_worker" {
    }
   ]
 
-  tags = local.tags
+  tags = var.tags
 }
 
 module "nlb_cp" {
@@ -66,6 +79,16 @@ module "nlb_cp" {
       port               = 9345
       protocol           = "TCP"
       target_group_index = 1
+    },
+    {
+      port               = 80
+      protocol           = "TCP"
+      target_group_index = 2
+    },
+    {
+      port               = 443
+      protocol           = "TCP"
+      target_group_index = 3
     }
   ]
 
@@ -101,11 +124,43 @@ module "nlb_cp" {
         timeout             = 6
         protocol            = "TCP"
       }
+    },
+    {
+      name_prefix      = "in-80"
+      backend_protocol = "TCP"
+      backend_port     = 80
+      target_type      = "instance"
+      preserve_client_ip = false
+      health_check = {
+        enabled             = true
+        interval            = 10
+        port                = "traffic-port"
+        healthy_threshold   = 2
+        unhealthy_threshold = 2
+        timeout             = 6
+        protocol            = "TCP"
+      }
+    },
+    {
+      name_prefix      = "in-443"
+      backend_protocol = "TCP"
+      backend_port     = 443
+      target_type      = "instance"
+      preserve_client_ip = false
+      health_check = {
+        enabled             = true
+        interval            = 10
+        port                = "traffic-port"
+        healthy_threshold   = 2
+        unhealthy_threshold = 2
+        timeout             = 6
+        protocol            = "TCP"
+      }
     }
     
   ]
 
-  tags = local.tags
+  tags = var.tags
 /*  access_logs = {
     bucket = "my-access-logs-bucket"
   }
@@ -124,6 +179,20 @@ resource "aws_lb_target_group_attachment" "agent" {
   target_group_arn = module.nlb_cp.target_group_arns[1]
   target_id        = module.ec2_instance_cp[count.index].id
   port             = 9345
+}
+
+resource "aws_lb_target_group_attachment" "ingress-80" {
+  count = length(module.ec2_instance_worker)
+  target_group_arn = module.nlb_cp.target_group_arns[2]
+  target_id        = module.ec2_instance_worker[count.index].id
+  port             = 80
+}
+
+resource "aws_lb_target_group_attachment" "ingress-443" {
+  count = length(module.ec2_instance_worker)
+  target_group_arn = module.nlb_cp.target_group_arns[3]
+  target_id        = module.ec2_instance_worker[count.index].id
+  port             = 443
 }
 
 resource "aws_eip" "this" {

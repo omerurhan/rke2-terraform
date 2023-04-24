@@ -4,7 +4,7 @@ module "ec2_instance_cp" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-ec2-instance.git?ref=v4.3.0"
 
   count = var.cp_count
-  name = "cp-${count.index}"
+  name = "${var.environment}-cp-${count.index}"
   #create_spot_instance = true
   associate_public_ip_address = true
 
@@ -13,7 +13,7 @@ module "ec2_instance_cp" {
   key_name               = var.key_name
   monitoring             = true
   vpc_security_group_ids = [module.cp_sg.security_group_id, module.node_sg.security_group_id, module.ssh_sg.security_group_id]
-  subnet_id              = element(module.vpc_upstream.public_subnets, count.index)
+  subnet_id              = element(module.vpc.public_subnets, count.index)
 
   root_block_device = [
     {
@@ -28,7 +28,7 @@ module "ec2_instance_worker" {
 
   count = var.worker_count
 
-  name = "worker-${count.index}"
+  name = "${var.environment}-worker-${count.index}"
   #create_spot_instance = true
   associate_public_ip_address = true
 
@@ -37,7 +37,7 @@ module "ec2_instance_worker" {
   key_name               = var.key_name
   monitoring             = true
   vpc_security_group_ids = [module.node_sg.security_group_id, module.ssh_sg.security_group_id]
-  subnet_id              = element(module.vpc_upstream.public_subnets, count.index)
+  subnet_id              = element(module.vpc.public_subnets, count.index)
 
   root_block_device = [
     {
@@ -60,13 +60,13 @@ module "ec2_instance_worker" {
 module "nlb_cp" {
   source  = "git::https://github.com/terraform-aws-modules/terraform-aws-alb.git?ref=v8.6.0"
 
-  name = "nlb-cp"
+  name = "${var.environment}-nlb-cp"
   load_balancer_type = "network"
-  vpc_id  = module.vpc_upstream.vpc_id
+  vpc_id  = module.vpc.vpc_id
   internal = false
   
 
-  subnet_mapping = [for i, eip in aws_eip.this : { allocation_id : eip.id, subnet_id : module.vpc_upstream.public_subnets[i] }]
+  subnet_mapping = [for i, eip in aws_eip.this : { allocation_id : eip.id, subnet_id : module.vpc.public_subnets[i] }]
   
 
   http_tcp_listeners = [

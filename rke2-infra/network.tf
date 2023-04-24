@@ -1,7 +1,7 @@
-module "vpc_upstream" {
+module "vpc" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-vpc.git?ref=v4.0.1"
 
-  name = "vpc_upstream"
+  name = "${var.environment}-vpc"
   cidr = var.vpc_cidr
   azs             = local.azs
   enable_dns_hostnames = true

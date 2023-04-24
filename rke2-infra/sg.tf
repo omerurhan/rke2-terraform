@@ -1,9 +1,9 @@
 module "cp_sg" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-security-group.git?ref=v4.17.2"
 
-  name        = "cp-sg"
+  name        = "${var.environment}-cp-sg"
   description = "K8S API Server Access"
-  vpc_id      = module.vpc_upstream.vpc_id
+  vpc_id      = module.vpc.vpc_id
 
   ingress_cidr_blocks  = [var.vpc_cidr, var.client_cidr]
   ingress_rules        = ["kubernetes-api-tcp"]
@@ -14,9 +14,9 @@ module "cp_sg" {
 module "node_sg" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-security-group.git?ref=v4.17.2"
 
-  name = "node-sg"
+  name = "${var.environment}-node-sg"
   description = "K8S Node to Node Acccess"
-  vpc_id      = module.vpc_upstream.vpc_id
+  vpc_id      = module.vpc.vpc_id
 
   ingress_cidr_blocks  = [var.vpc_cidr]
   ingress_rules        = ["all-all"]
@@ -30,9 +30,9 @@ module "node_sg" {
 module ssh_sg {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-security-group.git?ref=v4.17.2"
 
-  name = "ssh"
+  name = "${var.environment}-ssh"
   description = "Client SSH Access"
-  vpc_id      = module.vpc_upstream.vpc_id
+  vpc_id      = module.vpc.vpc_id
 
   ingress_cidr_blocks  = ["0.0.0.0/0"]
   ingress_rules        = ["ssh-tcp"]

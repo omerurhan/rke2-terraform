@@ -1,3 +1,3 @@
 # RKE2 Infrasturcture
 
-Infrastructer for RKE2 tests.
+Infrastruct for RKE2 tests.

@@ -64,6 +64,7 @@ module "nlb_cp" {
   load_balancer_type = "network"
   vpc_id  = module.vpc.vpc_id
   internal = false
+  subnets = module.vpc.public_subnets
   
 
   #subnet_mapping = [for i, eip in aws_eip.this : { allocation_id : eip.id, subnet_id : module.vpc.public_subnets[i] }]

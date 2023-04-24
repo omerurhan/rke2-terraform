@@ -66,7 +66,7 @@ module "nlb_cp" {
   internal = false
   
 
-  subnet_mapping = [for i, eip in aws_eip.this : { allocation_id : eip.id, subnet_id : module.vpc.public_subnets[i] }]
+  #subnet_mapping = [for i, eip in aws_eip.this : { allocation_id : eip.id, subnet_id : module.vpc.public_subnets[i] }]
   
 
   http_tcp_listeners = [
@@ -195,7 +195,7 @@ resource "aws_lb_target_group_attachment" "ingress-443" {
   port             = 443
 }
 
-resource "aws_eip" "this" {
-  count = length(local.azs)
-  vpc   = true
-}
+#resource "aws_eip" "this" {
+#  count = length(local.azs)
+#  vpc   = true
+#}

@@ -10,6 +10,7 @@ module "ec2_instance_cp" {
 
   ami                    = var.ami
   instance_type          = var.instance_type
+  iam_instance_profile   = aws_iam_instance_profile.loki_profile.name
   key_name               = var.key_name
   monitoring             = true
   vpc_security_group_ids = [module.cp_sg.security_group_id, module.node_sg.security_group_id, module.ssh_sg.security_group_id]

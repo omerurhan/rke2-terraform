@@ -199,6 +199,6 @@ resource "aws_lb_target_group_attachment" "ingress-443" {
 }
 
 resource "aws_iam_instance_profile" "loki_profile" {
-  name = "loki_profile"
+  name = "${var.environment}-loki_profile"
   role = var.instance_role
 }

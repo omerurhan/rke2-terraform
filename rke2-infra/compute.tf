@@ -35,6 +35,7 @@ module "ec2_instance_worker" {
 
   ami                    = var.ami
   instance_type          = var.instance_type
+  iam_instance_profile   = aws_iam_instance_profile.loki_profile.name
   key_name               = var.key_name
   monitoring             = true
   vpc_security_group_ids = [module.node_sg.security_group_id, module.ssh_sg.security_group_id]

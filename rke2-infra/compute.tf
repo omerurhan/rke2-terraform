@@ -196,7 +196,7 @@ resource "aws_lb_target_group_attachment" "ingress-443" {
   port             = 443
 }
 
-#resource "aws_eip" "this" {
-#  count = length(local.azs)
-#  vpc   = true
-#}
+resource "aws_iam_instance_profile" "loki_profile" {
+  name = "loki_profile"
+  role = var.instance_role
+}

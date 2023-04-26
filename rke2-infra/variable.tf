@@ -42,3 +42,7 @@ variable "worker_count" {
 variable "environment" {
   type = string
 }
+
+variable "instance_role" {
+  type = string
+}
